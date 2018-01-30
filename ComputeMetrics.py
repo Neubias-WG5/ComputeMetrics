@@ -34,32 +34,33 @@ if len(sys.argv)<4: # First argument is the name of the script
 infolder = sys.argv[1]
 reffolder = sys.argv[2]
 metricname = sys.argv[3]
-pattern = "*.ome.tif"
+suffix = '.ome.tif'
+pattern = '*'+suffix
 
 # Assume that for every image in infolder there is a reference image named imagename_lbl.ome.tiff
 for root, dirs, files in os.walk(infolder):
     for filename in fnmatch.filter(files, pattern):
         path1 = os.path.join(infolder, filename)
-        path2 = os.path.join(reffolder, filename[:-8] + "_lbl.ome.tif")
-        path3 = "./tmp/" +filename[:-8] + ".xml"
+        path2 = os.path.join(reffolder, filename)
+        path3 = "./tmp/" +filename[:-len(suffix)] + ".xml"
 
         if metricname == "ObjSeg":
             os.system("EvalSegmentation "+path1+" "+path2+" -use DICE -use AVGDIST -xml "+path3)
             # should erase tmp folder content upon results upload to Cytomine
         elif metricname == "ObjDet":
-            gt_xml_fname = path1[:-8] + '.xml'
+            gt_xml_fname = path1[:-len(suffix)] + '.xml'
             tracks_to_xml(gt_xml_fname, img_to_tracks(path1), False)
-            res_xml_fname = path2[:-8] + '.xml'
+            res_xml_fname = path2[:-len(suffix)] + '.xml'
             tracks_to_xml(res_xml_fname, img_to_tracks(path2), False)
             os.system('java -jar DetectionPerformance.jar ' + gt_xml_fname + ' ' + res_xml_fname + ' ' + sys.argv[4])
         elif metricname == "PrtTrk":
-            gt_xml_fname = path1[:-8] + '.xml'
+            gt_xml_fname = path1[:-len(suffix)] + '.xml'
             tracks_to_xml(gt_xml_fname, img_to_tracks(path1), True)
-            res_xml_fname = path2[:-8] + '.xml'
+            res_xml_fname = path2[:-len(suffix)] + '.xml'
             tracks_to_xml(res_xml_fname, img_to_tracks(path2), True)
             os.system('java -jar TrackingPerformance.jar -r ' + gt_xml_fname + ' -c ' + res_xml_fname + ' -o ' + res_xml_fname + ".score.txt" + ' ' + sys.argv[4])
         elif metricname == "ObjTrk":
-            tmp_folder = path1[:-8]
+            tmp_folder = path1[:-len(suffix)]
             ctc_gt_folder = os.path.join(tmp_folder, '01_GT')
             ctc_gt_seg = os.path.join(ctc_gt_folder, 'SEG')
             ctc_gt_tra = os.path.join(ctc_gt_folder, 'TRA')

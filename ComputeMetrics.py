@@ -13,12 +13,12 @@
 # "ObjSeg"      (DICE, AVD)
 # "ObjDet"      (TP, FN, FP, Recall, Precision, F1-score, RMSE over TP)
 # "PrtTrk"      (PTC)
+# "ObjTrk"      (CTC), extra inputs: 2 text files encoding divisions as specified in CTC - same folders as images
 #
 # To be added
 # "EventDet"    (FN, FP, TP, accuracy, precision, recall, F-score, True positive RMSE)
 # "FilTreeTrc"  (DIADEM)
 # "FilLoopTrc"  ?
-# "ObjTrk"      (CTC), extra inputs: 2 text files encoding divisions as specified in PTC - same folders as images
 # "PixClass"    (Confusion matrix, accuracy, precision, recall), inputs are two images (pixels > 0 are markers)
 # "MrkClass"    (Confusion matrix, accuracy, precision, recall), inputs are two csv files (list of labels in same order)
 
@@ -26,6 +26,7 @@ import fnmatch
 import os
 import sys
 from img_to_xml import *
+from img_to_seq import *
 
 if len(sys.argv)<4: # First argument is the name of the script
     sys.exit("Error: missing arguments.\nUsage: ComputeMetrics infolder outfolder MetricName (MetricArguments)")
@@ -57,3 +58,24 @@ for root, dirs, files in os.walk(infolder):
             res_xml_fname = path2[:-8] + '.xml'
             tracks_to_xml(res_xml_fname, img_to_tracks(path2), True)
             os.system('java -jar TrackingPerformance.jar -r ' + gt_xml_fname + ' -c ' + res_xml_fname + ' -o ' + res_xml_fname + ".score.txt" + ' ' + sys.argv[4])
+        elif metricname == "ObjTrk":
+            tmp_folder = path1[:-8]
+            ctc_gt_folder = os.path.join(tmp_folder, '01_GT')
+            ctc_gt_seg = os.path.join(ctc_gt_folder, 'SEG')
+            ctc_gt_tra = os.path.join(ctc_gt_folder, 'TRA')
+            ctc_res = os.path.join(tmp_folder, '01_RES')
+            os.mkdir(tmp_folder)
+            os.mkdir(ctc_gt_folder)
+            os.mkdir(ctc_gt_seg)
+            os.mkdir(ctc_gt_tra)
+            os.mkdir(ctc_res)
+            img_to_seq(path1, ctc_gt_seg, 'man_seg')
+            img_to_seq(path1, ctc_gt_tra, 'man_track')
+            img_to_seq(path2, ctc_res, 'mask')
+            os.system('./SEGMeasure ' + tmp_folder + ' 01')
+            # we need to copy the tracking text file to ctc_gt_tra and name it 'man_track.txt'
+            # we need to copy the tracking text file to ctc_res and name it 'res_track.txt'
+            #os.system('./TRAMeasure ' + tmp_folder + ' 01')
+            # we need to delete tmp_folder upon uploading the scores to Cytomine
+
+

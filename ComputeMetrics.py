@@ -12,12 +12,12 @@
 # ProblemClass:
 # "ObjSeg"      (DICE, AVD)
 # "ObjDet"      (TP, FN, FP, Recall, Precision, F1-score, RMSE over TP)
+# "PrtTrk"      (PTC)
 #
 # To be added
 # "EventDet"    (FN, FP, TP, accuracy, precision, recall, F-score, True positive RMSE)
 # "FilTreeTrc"  (DIADEM)
 # "FilLoopTrc"  ?
-# "PrtTrk"      (PTC)
 # "ObjTrk"      (CTC), extra inputs: 2 text files encoding divisions as specified in PTC - same folders as images
 # "PixClass"    (Confusion matrix, accuracy, precision, recall), inputs are two images (pixels > 0 are markers)
 # "MrkClass"    (Confusion matrix, accuracy, precision, recall), inputs are two csv files (list of labels in same order)
@@ -51,3 +51,9 @@ for root, dirs, files in os.walk(infolder):
             res_xml_fname = path2[:-8] + '.xml'
             tracks_to_xml(res_xml_fname, img_to_tracks(path2), False)
             os.system('java -jar DetectionPerformance.jar ' + gt_xml_fname + ' ' + res_xml_fname + ' ' + sys.argv[4])
+        elif metricname == "PrtTrk":
+            gt_xml_fname = path1[:-8] + '.xml'
+            tracks_to_xml(gt_xml_fname, img_to_tracks(path1), True)
+            res_xml_fname = path2[:-8] + '.xml'
+            tracks_to_xml(res_xml_fname, img_to_tracks(path2), True)
+            os.system('java -jar TrackingPerformance.jar -r ' + gt_xml_fname + ' -c ' + res_xml_fname + ' -o ' + res_xml_fname + ".score.txt" + ' ' + sys.argv[4])

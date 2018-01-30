@@ -11,9 +11,9 @@
 #
 # ProblemClass:
 # "ObjSeg"      (DICE, AVD)
+# "ObjDet"      (TP, FN, FP, Recall, Precision, F1-score, RMSE over TP)
 #
 # To be added
-# "ObjDet"      (FN, FP, TP, accuracy, precision, recall, F-score, True positive RMSE)
 # "EventDet"    (FN, FP, TP, accuracy, precision, recall, F-score, True positive RMSE)
 # "FilTreeTrc"  (DIADEM)
 # "FilLoopTrc"  ?
@@ -25,6 +25,7 @@
 import fnmatch
 import os
 import sys
+from img_to_xml import *
 
 if len(sys.argv)<4: # First argument is the name of the script
     sys.exit("Error: missing arguments.\nUsage: ComputeMetrics infolder outfolder MetricName (MetricArguments)")
@@ -44,3 +45,9 @@ for root, dirs, files in os.walk(infolder):
         if metricname == "ObjSeg":
             os.system("EvalSegmentation "+path1+" "+path2+" -use DICE -use AVGDIST -xml "+path3)
             # should erase tmp folder content upon results upload to Cytomine
+        elif metricname == "ObjDet":
+            gt_xml_fname = path1[:-8] + '.xml'
+            tracks_to_xml(gt_xml_fname, img_to_tracks(path1), False)
+            res_xml_fname = path2[:-8] + '.xml'
+            tracks_to_xml(res_xml_fname, img_to_tracks(path2), False)
+            os.system('java -jar DetectionPerformance.jar ' + gt_xml_fname + ' ' + res_xml_fname + ' ' + sys.argv[4])

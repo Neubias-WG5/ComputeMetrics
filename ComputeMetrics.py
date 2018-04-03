@@ -45,7 +45,7 @@ for root, dirs, files in os.walk(infolder):
         path3 = "./tmp/" +filename[:-len(suffix)] + ".xml"
 
         if metricname == "ObjSeg":
-            os.system("EvalSegmentation "+path1+" "+path2+" -use DICE -use AVGDIST -xml "+path3)
+            os.system("EvalSegmentation "+path1+" "+path2+" -use DICE,AVGDIST -xml "+path3)
             # should erase tmp folder content upon results upload to Cytomine
         elif metricname == "ObjDet":
             gt_xml_fname = path1[:-len(suffix)] + '.xml'

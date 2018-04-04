@@ -35,15 +35,16 @@ infolder = sys.argv[1]
 reffolder = sys.argv[2]
 metricname = sys.argv[3]
 suffix = '.ome.tif'
+#suffix = '.tif'
 pattern = '*'+suffix
 
 # Assume that for every image in infolder there is a reference image named imagename_lbl.ome.tiff
 for root, dirs, files in os.walk(infolder):
     for filename in fnmatch.filter(files, pattern):
         path1 = os.path.join(infolder, filename)
-        path2 = os.path.join(reffolder, filename[:-8] + "_lbl.ome.tif")
+        path2 = os.path.join(reffolder, filename[:-len(suffix)] + "_lbl" + suffix)
         path3 = "./tmp/" +filename[:-len(suffix)] + ".xml"
-
+        
         if metricname == "ObjSeg":
             os.system("EvalSegmentation "+path1+" "+path2+" -use DICE,AVGDIST -xml "+path3)
             # should erase tmp folder content upon results upload to Cytomine

@@ -41,7 +41,7 @@ pattern = '*'+suffix
 for root, dirs, files in os.walk(infolder):
     for filename in fnmatch.filter(files, pattern):
         path1 = os.path.join(infolder, filename)
-        path2 = os.path.join(reffolder, filename)
+        path2 = os.path.join(reffolder, filename[:-8] + "_lbl.ome.tif")
         path3 = "./tmp/" +filename[:-len(suffix)] + ".xml"
 
         if metricname == "ObjSeg":

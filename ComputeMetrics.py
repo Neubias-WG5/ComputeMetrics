@@ -1,20 +1,20 @@
 # Usage:            ComputeMetrics infile reffile problemclass tmpfolder
-# infile:         	Worflow output image
+# infile:           Worflow output image
 # reffile:     	    Reference images (ground truth)
 # problemclass:     Problem class (6 character string, see below)
-# tmpfolder:    	A temporary folder required for some metric computation
+# tmpfolder:        A temporary folder required for some metric computation
 #
 # problemclass:
-# "ObjSeg"      (DICE, AVD)
-# "SptCnt"      (Normalized spot counts difference)
-# "PixCla"    	(Confusion matrix, F1-score, accuracy, precision, recall), inputs are two images (pixels > 0 are markers)
+# "ObjSeg"      Object segmentation (DICE, AVD), work with binary or label 2D/3D masks images (regular multipage tif / OME-tif)
+# "SptCnt"      Spot counting (Normalized spot count difference), same as above
+# "PixCla"    	Pixel classification (Confusion matrix, F1-score, accuracy, precision, recall), same as above (0 pixels ignored)
 # To be completed by Martin
-# "ObjDet"      (TP, FN, FP, Recall, Precision, F1-score, RMSE over TP)
-# "PrtTrk"      (PTC)
-# "ObjTrk"      (CTC), extra inputs: 2 text files encoding divisions as specified in CTC - same folders as images
+# "ObjDet"      Object detection matching (TP, FN, FP, Recall, Precision, F1-score, RMSE over TP), not working yet
+# "PrtTrk"      Particle (point) tracking (Particle Tracking Challenge metric), maximum linking distance set to a fixed value
+# "ObjTrk"      Object tracking (Cell Tracking Challenge metric), for object divisions requires an extra text file encoding division locations
 # To be added
-# "FilTreeTrc"  (DIADEM)
-# "FilLoopTrc"  ?
+# "TreTrc"      Filament tracing (trees), we consider including DIADEM metric but that requires to convert skeletons (workflow outputs) to SWC format 
+# "LooTrc"      Filament tracing (loopy networks)
 
 import os
 import re

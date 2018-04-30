@@ -83,28 +83,28 @@ def computemetrics( infile, reffile, problemclass, tmpfolder ):
 		
 	elif problemclass == "ObjDet":
 	
-		# Martin please review / add valid images: Unknown exception caught with current test images
-	
-		gt_xml_fname = tmpfolder+"/intracks.xml"
-		tracks_to_xml(gt_xml_fname, img_to_tracks(infile), True)
-		res_xml_fname = tmpfolder+"/reftracks.xml"
-		tracks_to_xml(res_xml_fname, img_to_tracks(reffile), True)
-		os.system('java -jar DetectionPerformance.jar ' + gt_xml_fname + ' ' + res_xml_fname + ' ' + tmpfolder+'/score.txt')
+		ref_xml_fname = tmpfolder+"/reftracks.xml"
+		tracks_to_xml(ref_xml_fname, img_to_tracks(reffile), False)
+		in_xml_fname = tmpfolder+"/intracks.xml"
+		tracks_to_xml(in_xml_fname, img_to_tracks(infile), False)
+		# the third parameter represents the gating distance
+		# the current structure does not allow us to specify this parameter explicitly 
+		os.system('java -jar DetectionPerformance.jar ' + ref_xml_fname + ' ' + in_xml_fname + ' 5')
 		
-		#Parse score.txt file
+		# Parse *.score.txt file created automatically in tmpfolder
 		bchmetrics = ""
 	
 	elif problemclass == "PrtTrk":
 	
-		# Martin please add valid test images and test
-	
-		gt_xml_fname = tmpfolder+"/intracks.xml"
-		tracks_to_xml(gt_xml_fname, img_to_tracks(infile), True)
-		res_xml_fname = tmpfolder+"/reftracks.xml"
-		tracks_to_xml(res_xml_fname, img_to_tracks(reffile), True)
-		os.system('java -jar TrackingPerformance.jar -r ' + gt_xml_fname + ' -c ' + res_xml_fname + ' -o ' + ".score.txt") 
-		# Could add a gobal paremeter to change maximum linking distance
-	
+		ref_xml_fname = tmpfolder+"/reftracks.xml"
+		tracks_to_xml(ref_xml_fname, img_to_tracks(reffile), True)
+		in_xml_fname = tmpfolder+"/intracks.xml"
+		tracks_to_xml(in_xml_fname, img_to_tracks(infile), True)
+		# the fourth parameter represents the gating distance
+		# the current structure does not allow us to specify this parameter explicitly 
+		os.system('java -jar TrackingPerformance.jar -r ' + ref_xml_fname + ' -c ' + in_xml_fname + ' -o ' + in_xml_fname + '.score.txt' + ' 5') 
+
+                # Parse *.score.txt file created automatically in tmpfolder
 		bchmetrics = ""
 	
 	elif problemclass == "ObjTrk":

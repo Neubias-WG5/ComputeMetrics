@@ -3,6 +3,7 @@
 # reffile:     	    Reference images (ground truth)
 # problemclass:     Problem class (6 character string, see below)
 # tmpfolder:        A temporary folder required for some metric computation
+# extra_params:     A list of possible extra parameters required by some of the metrics
 #
 # problemclass:
 # "ObjSeg"      Object segmentation (DICE, AVD), work with binary or label 2D/3D masks images (regular multipage tif / OME-tif)
@@ -29,7 +30,7 @@ import tifffile as tiff
 from img_to_xml import *
 from img_to_seq import *
 
-def computemetrics( infile, reffile, problemclass, tmpfolder ):
+def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params ):
 	
 	# Remove all .xml (temporary) files in tmpfolder
 	filelist = [ f for f in os.listdir(tmpfolder) if f.endswith(".xml") ]
@@ -88,8 +89,9 @@ def computemetrics( infile, reffile, problemclass, tmpfolder ):
 		in_xml_fname = tmpfolder+"/intracks.xml"
 		tracks_to_xml(in_xml_fname, img_to_tracks(infile), False)
 		# the third parameter represents the gating distance
-		# the current structure does not allow us to specify this parameter explicitly 
-		os.system('java -jar DetectionPerformance.jar ' + ref_xml_fname + ' ' + in_xml_fname + ' 5')
+		gating_dist = ''
+		if extra_params is not None: gating_dist = extra_params[0]
+		os.system('java -jar DetectionPerformance.jar ' + ref_xml_fname + ' ' + in_xml_fname + ' ' + gating_dist)
 		
 		# Parse *.score.txt file created automatically in tmpfolder
 		bchmetrics = ""
@@ -101,8 +103,9 @@ def computemetrics( infile, reffile, problemclass, tmpfolder ):
 		in_xml_fname = tmpfolder+"/intracks.xml"
 		tracks_to_xml(in_xml_fname, img_to_tracks(infile), True)
 		# the fourth parameter represents the gating distance
-		# the current structure does not allow us to specify this parameter explicitly 
-		os.system('java -jar TrackingPerformance.jar -r ' + ref_xml_fname + ' -c ' + in_xml_fname + ' -o ' + in_xml_fname + '.score.txt' + ' 5') 
+		gating_dist = ''
+		if extra_params is not None: gating_dist = extra_params[0]
+		os.system('java -jar TrackingPerformance.jar -r ' + ref_xml_fname + ' -c ' + in_xml_fname + ' -o ' + in_xml_fname + '.score.txt' + ' ' + gating_dist) 
 
                 # Parse *.score.txt file created automatically in tmpfolder
 		bchmetrics = ""

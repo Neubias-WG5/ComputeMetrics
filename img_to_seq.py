@@ -12,7 +12,6 @@ def img_to_seq(fname, out_dir, template):
     Z = img.ome_metadata.get('Image').get('Pixels').get('SizeZ')
     Y = img.ome_metadata.get('Image').get('Pixels').get('SizeY')
     X = img.ome_metadata.get('Image').get('Pixels').get('SizeX')
-    #Initially: img.ome_metadata.get('OME').get('Image').get('Pixels')
     img_data = img.asarray().ravel()
     index = 0
     offset = Z*Y*X

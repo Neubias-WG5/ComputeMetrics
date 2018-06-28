@@ -7,11 +7,10 @@ import tifffile as tiff
 def img_to_tracks(fname):
     # Should be adapted to also work with regular multi-tiff files
     img = tiff.TiffFile(fname)
-    T = img.ome_metadata.get('OME').get('Image').get('Pixels').get('SizeT')
-    Z = img.ome_metadata.get('OME').get('Image').get('Pixels').get('SizeZ')
-    Y = img.ome_metadata.get('OME').get('Image').get('Pixels').get('SizeY')
-    X = img.ome_metadata.get('OME').get('Image').get('Pixels').get('SizeX')
-    #Initially: img.ome_metadata.get('OME').get('Image').get('Pixels')
+    T = img.ome_metadata.get('Image').get('Pixels').get('SizeT')
+    Z = img.ome_metadata.get('Image').get('Pixels').get('SizeZ')
+    Y = img.ome_metadata.get('Image').get('Pixels').get('SizeY')
+    X = img.ome_metadata.get('Image').get('Pixels').get('SizeX')
     track_dict = {}
     img_data = img.asarray().ravel()
     for t in range(T):

@@ -32,8 +32,8 @@ from img_to_seq import *
 
 def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params ):
 	
-	# Remove all .xml (temporary) files in tmpfolder
-	filelist = [ f for f in os.listdir(tmpfolder) if f.endswith(".xml") ]
+	# Remove all xml and txt (temporary) files in tmpfolder
+	filelist = [ f for f in os.listdir(tmpfolder) if (f.endswith(".xml") or f.endswith(".txt")) ]
 	for f in filelist:
 		os.remove(os.path.join(tmpfolder, f))
 	

@@ -94,7 +94,8 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params ):
 		os.system('java -jar DetectionPerformance.jar ' + ref_xml_fname + ' ' + in_xml_fname + ' ' + gating_dist)
 		
 		# Parse *.score.txt file created automatically in tmpfolder
-		bchmetrics = ""
+		with open(in_xml_fname+".score.txt", "r") as f:
+                        bchmetrics = [line.split(':')[1].strip() for line in f.readlines()]
 	
 	elif problemclass == "PrtTrk":
 	
@@ -102,13 +103,15 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params ):
 		tracks_to_xml(ref_xml_fname, img_to_tracks(reffile), True)
 		in_xml_fname = tmpfolder+"/intracks.xml"
 		tracks_to_xml(in_xml_fname, img_to_tracks(infile), True)
+		res_fname = in_xml_fname + ".score.txt"
 		# the fourth parameter represents the gating distance
 		gating_dist = ''
 		if extra_params is not None: gating_dist = extra_params[0]
-		os.system('java -jar TrackingPerformance.jar -r ' + ref_xml_fname + ' -c ' + in_xml_fname + ' -o ' + in_xml_fname + '.score.txt' + ' ' + gating_dist) 
+		os.system('java -jar TrackingPerformance.jar -r ' + ref_xml_fname + ' -c ' + in_xml_fname + ' -o ' + res_fname + ' ' + gating_dist) 
 
-                # Parse *.score.txt file created automatically in tmpfolder
-		bchmetrics = ""
+                # Parse the output file created automatically in tmpfolder
+		with open(res_fname, "r") as f:
+                        bchmetrics = [line.split(':')[0].strip() for line in f.readlines()]
 	
 	elif problemclass == "ObjTrk":
 	

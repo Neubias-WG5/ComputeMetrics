@@ -14,6 +14,8 @@
 # python Test_ComputeMetrics.py imgs/in_objseg_tiflbl imgs/ref_objseg_tiflbl "ObjSeg" tmp
 # python Test_ComputeMetrics.py imgs/in_sptcnt imgs/ref_sptcnt "SptCnt" tmp
 # python Test_ComputeMetrics.py imgs/in_pixcla imgs/ref_pixcla "PixCla" tmp
+# python Test_ComputeMetrics.py imgs/in_lootrc imgs/ref_lootrc "LooTrc" tmp gating_dist
+# python Test_ComputeMetrics.py imgs/in_tretrc imgs/ref_tretrc "TreTrc" tmp gating_dist
 # python Test_ComputeMetrics.py imgs/in_objdet imgs/ref_objdet "ObjDet" tmp gating_dist
 # python Test_ComputeMetrics.py imgs/in_prttrk imgs/ref_prttrk "PrtTrk" tmp gating_dist
 
@@ -35,5 +37,5 @@ infilenames = [os.path.join(infolder,filename) for _, _, files in walk(infolder)
 reffilenames = [os.path.join(reffolder,filename) for _, _, files in walk(reffolder) for filename in files]
 
 for i in range(0,len(infilenames)):
-	bchmetrics = computemetrics(infilenames[i],reffilenames[i],problemclass,tmpfolder,extra_params)
-	print(bchmetrics)
+    bchmetrics = computemetrics(infilenames[i],reffilenames[i],problemclass,tmpfolder,extra_params)
+    print(bchmetrics)

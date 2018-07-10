@@ -131,7 +131,7 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params ):
         # the third parameter represents the gating distance
         gating_dist = ''
         if extra_params is not None: gating_dist = extra_params[0]
-        os.system('java -jar DetectionPerformance.jar ' + ref_xml_fname + ' ' + in_xml_fname + ' ' + gating_dist)
+        os.system('java -jar /usr/bin/DetectionPerformance.jar ' + ref_xml_fname + ' ' + in_xml_fname + ' ' + gating_dist)
 
         # Parse *.score.txt file created automatically in tmpfolder
         with open(in_xml_fname+".score.txt", "r") as f:
@@ -147,7 +147,7 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params ):
         # the fourth parameter represents the gating distance
         gating_dist = ''
         if extra_params is not None: gating_dist = extra_params[0]
-        os.system('java -jar TrackingPerformance.jar -r ' + ref_xml_fname + ' -c ' + in_xml_fname + ' -o ' + res_fname + ' ' + gating_dist)
+        os.system('java -jar /usr/bin/TrackingPerformance.jar -r ' + ref_xml_fname + ' -c ' + in_xml_fname + ' -o ' + res_fname + ' ' + gating_dist)
 
                 # Parse the output file created automatically in tmpfolder
         with open(res_fname, "r") as f:

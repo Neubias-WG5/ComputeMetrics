@@ -36,7 +36,27 @@ import tifffile as tiff
 from .img_to_xml import *
 from .img_to_seq import *
 
-def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None ):
+
+def computemetrics_batch(infiles, refiles, problemclass, tmpfolder, extra_params=None):
+    """Runs compute metrics for all pairs of in and ref files.
+    Metrics and parameters values are returned in a dictionary mapping the metrics and parameters names with
+    a list of respective values (as many as pair of files).
+    """
+    results = dict()
+    for infile, reffile in zip(infiles, refiles):
+        metrics, params = computemetrics(infile, reffile, problemclass, tmpfolder, extra_params=extra_params)
+
+        def extend_list_dict(all_dict, curr_dict):
+            for metric_name, metric_value in curr_dict.items():
+                results[metric_name] = all_dict.get(metric_name, []) + [metric_value]
+
+        extend_list_dict(results, metrics)
+        extend_list_dict(results, params)
+
+    return results
+
+
+def computemetrics(infile, reffile, problemclass, tmpfolder, extra_params=None):
 
     # Remove all xml and txt (temporary) files in tmpfolder
     filelist = [ f for f in os.listdir(tmpfolder) if (f.endswith(".xml") or f.endswith(".txt")) ]

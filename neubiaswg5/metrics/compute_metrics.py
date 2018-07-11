@@ -32,7 +32,7 @@ import tifffile as tiff
 from .img_to_xml import *
 from .img_to_seq import *
 
-def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params ):
+def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None ):
 
     # Remove all xml and txt (temporary) files in tmpfolder
     filelist = [ f for f in os.listdir(tmpfolder) if (f.endswith(".xml") or f.endswith(".txt")) ]

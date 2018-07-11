@@ -5,6 +5,10 @@
 # tmpfolder:        A temporary folder required for some metric computation
 # extra_params:     A list of possible extra parameters required by some of the metrics
 #
+# Returns:
+#  metrics_dict: mapping metrics name with their value
+#  params_dict: mapping metric parameters with their value
+#
 # problemclass:
 # "ObjSeg"      Object segmentation (DICE, AVD), work with binary or label 2D/3D masks images (regular multipage tif / OME-tif)
 # "SptCnt"      Spot counting (Normalized spot count difference), same as above
@@ -39,6 +43,9 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
     for f in filelist:
         os.remove(os.path.join(tmpfolder, f))
 
+    metrics_dict = {}
+    params_dict = {}
+
     # Switch problemclass
     if problemclass == "ObjSeg":
 
@@ -49,6 +56,9 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
             data = myfile.read()
             inds = [m.start() for m in re.finditer("value", data)]
             bchmetrics = [data[ind+7:data.find('"',ind+7)] for ind in inds]
+
+        metric_names = ["DICE_COEFFICIENT", "AVERAGE_HAUSDORFF_DISTANCE"]
+        metrics_dict.update({name: value for name, value in zip(metric_names, bchmetrics)})
 
     elif problemclass == "SptCnt":
 
@@ -61,6 +71,8 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
         cnt_pred = np.count_nonzero(y_pred)
         cnt_true = np.count_nonzero(y_true)
         bchmetrics = abs(cnt_pred-cnt_true)/cnt_true
+
+        metrics_dict["RELATIVE_ERROR_COUNT"] = bchmetrics
 
     elif problemclass == "PixCla":
 
@@ -75,13 +87,11 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
         y_true_cleaned = y_true[np.where(y_true > 0)]
         y_pred_cleaned = y_pred[np.where(y_true > 0)]
 
-        CM = confusion_matrix(y_true_cleaned, y_pred_cleaned)
-
-        F1score = f1_score(y_true_cleaned, y_pred_cleaned, labels=None, pos_label=1, average='weighted', sample_weight=None)
-        Accscore = accuracy_score(y_true_cleaned, y_pred_cleaned, normalize=True, sample_weight=None)
-        Prescore = precision_score(y_true_cleaned, y_pred_cleaned, labels=None, pos_label=1, average='weighted', sample_weight=None)
-        Recscore = recall_score(y_true_cleaned, y_pred_cleaned, labels=None, pos_label=1, average='weighted', sample_weight=None)
-        bchmetrics = [CM, F1score, Accscore, Prescore, Recscore]
+        metrics_dict["CONFUSION_MATRIX"] = confusion_matrix(y_true_cleaned, y_pred_cleaned)
+        metrics_dict["F1_SCORE"] = f1_score(y_true_cleaned, y_pred_cleaned, labels=None, pos_label=1, average='weighted', sample_weight=None)
+        metrics_dict["ACCURACY"] = accuracy_score(y_true_cleaned, y_pred_cleaned, normalize=True, sample_weight=None)
+        metrics_dict["PRECISION"] = precision_score(y_true_cleaned, y_pred_cleaned, labels=None, pos_label=1, average='weighted', sample_weight=None)
+        metrics_dict["RECALL"] = recall_score(y_true_cleaned, y_pred_cleaned, labels=None, pos_label=1, average='weighted', sample_weight=None)
 
     elif problemclass == "TreTrc":
 
@@ -96,8 +106,9 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
         Dst2_onskl = Dst2[indx]
         gating_dist = 5
         if extra_params is not None: gating_dist = int(extra_params[0])
-        Err_skl_frc = (sum(Dst1_onskl > gating_dist)+sum(Dst2_onskl > gating_dist))/(Dst1_onskl.size+Dst2_onskl.size)
-        bchmetrics = [Err_skl_frc]
+
+        metrics_dict["UNMATCHED_VOXEL_RATE"] = (sum(Dst1_onskl > gating_dist)+sum(Dst2_onskl > gating_dist))/(Dst1_onskl.size+Dst2_onskl.size)
+        params_dict["GATING_DIST"] = gating_dist
 
     elif problemclass == "LooTrc":
 
@@ -112,8 +123,9 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
         Dst2_onskl = Dst2[indx]
         gating_dist = 5
         if extra_params is not None: gating_dist = int(extra_params[0])
-        Err_skl_frc = (sum(Dst1_onskl > gating_dist)+sum(Dst2_onskl > gating_dist))/(Dst1_onskl.size+Dst2_onskl.size)
-        bchmetrics = [Err_skl_frc]
+
+        metrics_dict["UNMATCHED_VOXEL_RATE"] = (sum(Dst1_onskl > gating_dist)+sum(Dst2_onskl > gating_dist))/(Dst1_onskl.size+Dst2_onskl.size)
+        params_dict["GATING_DIST"] = gating_dist
 
         #Msk1 = dilation(Pred_Data, ball(5))
         #Msk2 = dilation(True_Data, ball(5))
@@ -137,6 +149,10 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
         with open(in_xml_fname+".score.txt", "r") as f:
             bchmetrics = [line.split(':')[1].strip() for line in f.readlines()]
 
+        metric_names = ["TRUE_POS", "FALSE_NEG", "FALSE_POS", "RECALL", "PRECISIOM", "F1_SCORE", "RMSE"]
+        metrics_dict.update({name: value for name, value in zip(metric_names, bchmetrics)})
+        params_dict["GATING_DIST"] = gating_dist
+
     elif problemclass == "PrtTrk":
 
         ref_xml_fname = tmpfolder+"/reftracks.xml"
@@ -149,9 +165,18 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
         if extra_params is not None: gating_dist = extra_params[0]
         os.system('java -jar /usr/bin/TrackingPerformance.jar -r ' + ref_xml_fname + ' -c ' + in_xml_fname + ' -o ' + res_fname + ' ' + gating_dist)
 
-                # Parse the output file created automatically in tmpfolder
+        # Parse the output file created automatically in tmpfolder
         with open(res_fname, "r") as f:
-                        bchmetrics = [line.split(':')[0].strip() for line in f.readlines()]
+            bchmetrics = [line.split(':')[0].strip() for line in f.readlines()]
+
+        metric_names = [
+            "PAIRING_DST", "NORM_PAIRING_SCORE_ALPHA", "FULL_NORM_PAIRING_SCORE_BETA", "N_REF_TRACKS",  "N_CAND_TRACKS",
+            "JACCARD_SIMILARITY_TRACKS", "N_PAIRED_TRACKS", "N_MISSED_TRACKS", "N_SPURIOUS_TRACKS", "N_REF_DETECTIONS",
+            "N_CAND_DETECTIONS", "JACCARD_SIMILARITY_DET", "N_PAIRED_DETECTIONS", "N_MISSED_DETECTIONS",
+            "N_SPURIOUS_DETECTIONS"
+        ]
+        metrics_dict.update({name: value for name, value in zip(metric_names, bchmetrics)})
+        params_dict["GATING_DIST"] = gating_dist
 
     elif problemclass == "ObjTrk":
 
@@ -177,6 +202,7 @@ def computemetrics( infile, reffile, problemclass, tmpfolder, extra_params=None 
         ## we need to delete tmp_folder upon uploading the scores to Cytomine
 
         #Parse result files
-        bchmetrics = ""
+        # bchmetrics = []
+        pass
 
-    return bchmetrics
+    return metrics_dict, params_dict

@@ -104,8 +104,13 @@ def computemetrics(infile, reffile, problemclass, tmpfolder, extra_params=None):
         y_true = np.array(True_Data).ravel()	# Convert to 1-D array
 
         # Clean the predictions and ground truths (labels: 1,2,3... anything else is discarded)
-        y_true_cleaned = y_true[np.where(y_true > 0)]
-        y_pred_cleaned = y_pred[np.where(y_true > 0)]
+        y_true_cleaned = []
+        y_pred_cleaned = []
+
+        for i in range(0, len(y_true)):
+            if y_true[i] > 0 or y_pred[i]>0:
+                y_true_cleaned.append(y_true[i]>0)
+                y_pred_cleaned.append(y_pred[i]>0)
 
         metrics_dict["CONFUSION_MATRIX"] = confusion_matrix(y_true_cleaned, y_pred_cleaned)
         metrics_dict["F1_SCORE"] = f1_score(y_true_cleaned, y_pred_cleaned, labels=None, pos_label=1, average='weighted', sample_weight=None)

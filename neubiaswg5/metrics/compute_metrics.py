@@ -17,25 +17,24 @@
 # "LooTrc"      Filament tracing (loopy networks)
 # "ObjDet"      Object detection matching (TP, FN, FP, Recall, Precision, F1-score, RMSE over TP), not working yet
 # "PrtTrk"      Particle (point) tracking (Particle Tracking Challenge metric), maximum linking distance set to a fixed value
-# To be completed by Martin
-# "ObjTrk"      Object tracking (Cell Tracking Challenge metric), for object divisions requires an extra text file encoding division locations
+# "ObjTrk"      Object tracking (Cell Tracking Challenge metrics), for object divisions requires an extra text file encoding division locations
 
 import os
 import re
 import sys
+import shutil
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import confusion_matrix
-from skimage.morphology import ball
-from skimage.morphology import dilation
+#from skimage.morphology import ball
+#from skimage.morphology import dilation
 import numpy as np
 from scipy import ndimage
 import tifffile as tiff
 from .img_to_xml import *
 from .img_to_seq import *
-
 
 def computemetrics_batch(infiles, refiles, problemclass, tmpfolder, extra_params=None):
     """Runs compute metrics for all pairs of in and ref files.
@@ -62,6 +61,10 @@ def computemetrics(infile, reffile, problemclass, tmpfolder, extra_params=None):
     filelist = [ f for f in os.listdir(tmpfolder) if (f.endswith(".xml") or f.endswith(".txt")) ]
     for f in filelist:
         os.remove(os.path.join(tmpfolder, f))
+
+    # Remove all (temporary) subdirectories in tmpfolder
+    for subdir in next(os.walk(tmpfolder))[1]:
+        shutil.rmtree(os.path.join(tmpfolder, subdir), ignore_errors=True)
 
     metrics_dict = {}
     params_dict = {}
@@ -161,9 +164,9 @@ def computemetrics(infile, reffile, problemclass, tmpfolder, extra_params=None):
 
     elif problemclass == "ObjDet":
 
-        ref_xml_fname = tmpfolder+"/reftracks.xml"
+        ref_xml_fname = os.path.join(tmpfolder, "reftracks.xml")
         tracks_to_xml(ref_xml_fname, img_to_tracks(reffile), False)
-        in_xml_fname = tmpfolder+"/intracks.xml"
+        in_xml_fname = os.path.join(tmpfolder, "intracks.xml")
         tracks_to_xml(in_xml_fname, img_to_tracks(infile), False)
         # the third parameter represents the gating distance
         gating_dist = ''
@@ -180,9 +183,9 @@ def computemetrics(infile, reffile, problemclass, tmpfolder, extra_params=None):
 
     elif problemclass == "PrtTrk":
 
-        ref_xml_fname = tmpfolder+"/reftracks.xml"
+        ref_xml_fname = os.path.join(tmpfolder, "reftracks.xml")
         tracks_to_xml(ref_xml_fname, img_to_tracks(reffile), True)
-        in_xml_fname = tmpfolder+"/intracks.xml"
+        in_xml_fname = os.path.join(tmpfolder, "intracks.xml")
         tracks_to_xml(in_xml_fname, img_to_tracks(infile), True)
         res_fname = in_xml_fname + ".score.txt"
         # the fourth parameter represents the gating distance
@@ -205,29 +208,35 @@ def computemetrics(infile, reffile, problemclass, tmpfolder, extra_params=None):
 
     elif problemclass == "ObjTrk":
 
-        # Martin: please adapt the code accordingly
+        # Convert the data into the Cell Tracking Challenge format
+        ctc_gt_folder = os.path.join(tmpfolder, "01_GT")
+        ctc_gt_seg = os.path.join(ctc_gt_folder, "SEG")
+        ctc_gt_tra = os.path.join(ctc_gt_folder, "TRA")
+        ctc_res_folder = os.path.join(tmpfolder, "01_RES")
+        os.mkdir(ctc_gt_folder)
+        os.mkdir(ctc_gt_seg)
+        os.mkdir(ctc_gt_tra)
+        os.mkdir(ctc_res_folder)
+        img_to_seq(reffile, ctc_gt_seg, "man_seg")
+        img_to_seq(reffile, ctc_gt_tra, "man_track")
+        img_to_seq(infile, ctc_res_folder, "mask")
 
-        #tmp_folder = path1[:-len(suffix)]
-        #ctc_gt_folder = os.path.join(tmp_folder, '01_GT')
-        #ctc_gt_seg = os.path.join(ctc_gt_folder, 'SEG')
-        #ctc_gt_tra = os.path.join(ctc_gt_folder, 'TRA')
-        #ctc_res = os.path.join(tmp_folder, '01_RES')
-        #os.mkdir(tmp_folder)
-        #os.mkdir(ctc_gt_folder)
-        #os.mkdir(ctc_gt_seg)
-        #os.mkdir(ctc_gt_tra)
-        #os.mkdir(ctc_res)
-        #img_to_seq(path1, ctc_gt_seg, 'man_seg')
-        #img_to_seq(path1, ctc_gt_tra, 'man_track')
-        #img_to_seq(path2, ctc_res, 'mask')
-        #os.system('./SEGMeasure ' + tmp_folder + ' 01')
-        ## we need to copy the tracking text file to ctc_gt_tra and name it 'man_track.txt'
-        ## we need to copy the tracking text file to ctc_res and name it 'res_track.txt'
-        ##os.system('./TRAMeasure ' + tmp_folder + ' 01')
-        ## we need to delete tmp_folder upon uploading the scores to Cytomine
+        # Copy the track text files into the created folders
+        ref_txt_file = reffile[:reffile.find('.')]+".txt"
+        in_txt_file = infile[:infile.find('.')]+".txt"
+        shutil.copy2(ref_txt_file, os.path.join(ctc_gt_tra, "man_track.txt"))
+        shutil.copy2(in_txt_file, os.path.join(ctc_res_folder, "res_track.txt"))
 
-        #Parse result files
-        # bchmetrics = []
-        pass
+        # Run the evaluation routines
+        measure_fname = os.path.join(tmpfolder, "measures.txt")
+        os.system("/usr/bin/SEGMeasure.exe " + tmpfolder + " 01 >> " + measure_fname)
+        os.system("/usr/bin/TRAMeasure.exe " + tmpfolder + " 01 >> " + measure_fname)
+
+        #Parse the output file with the measured scores
+        with open(measure_fname, "r") as f:
+            bchmetrics = [line.split(':')[1].strip() for line in f.readlines()]
+
+        metric_names = [ "SEG", "TRA" ]
+        metrics_dict.update({name: value for name, value in zip(metric_names, bchmetrics)})
 
     return metrics_dict, params_dict

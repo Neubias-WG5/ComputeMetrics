@@ -18,6 +18,7 @@
 # python Test_ComputeMetrics.py imgs/in_tretrc imgs/ref_tretrc "TreTrc" tmp gating_dist
 # python Test_ComputeMetrics.py imgs/in_objdet imgs/ref_objdet "ObjDet" tmp gating_dist
 # python Test_ComputeMetrics.py imgs/in_prttrk imgs/ref_prttrk "PrtTrk" tmp gating_dist
+# python Test_ComputeMetrics.py imgs/in_objtrk imgs/ref_objtrk "ObjTrk" tmp 
 
 import sys
 import os
@@ -32,9 +33,9 @@ extra_params = None
 if len(sys.argv) > 5:
         extra_params = sys.argv[5:]
 
-# Assume that matched images appear in same order in both lists
-infilenames = [os.path.join(infolder,filename) for _, _, files in walk(infolder) for filename in files]
-reffilenames = [os.path.join(reffolder,filename) for _, _, files in walk(reffolder) for filename in files]
+# Assume that matched TIFF images appear in the same order in both lists
+infilenames = [os.path.join(infolder,filename) for _, _, files in walk(infolder) for filename in files if filename.endswith(".tif")]
+reffilenames = [os.path.join(reffolder,filename) for _, _, files in walk(reffolder) for filename in files if filename.endswith(".tif")]
 
 for i in range(0,len(infilenames)):
     bchmetrics = computemetrics(infilenames[i],reffilenames[i],problemclass,tmpfolder,extra_params)

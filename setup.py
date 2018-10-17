@@ -9,5 +9,5 @@ setup(
     version=neubiaswg5.__version__,
     description='Metric computation module of Neubias-WG5',
     packages=['neubiaswg5', 'neubiaswg5.metrics'],
-    install_requires=['scipy', 'tifffile', 'scikit-image', 'scikit-learn']
+    install_requires=['scipy', 'tifffile', 'scikit-image', 'scikit-learn', 'pandas']
 )
